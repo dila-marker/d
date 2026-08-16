@@ -1,0 +1,15 @@
+t(hours.value)||1;var t=parseInt(tax.value)||0;var p=parseFloat(proj.value)||1;if(inc<=0||p<=0){alert('Введи доход и часы на проект > 0');return;}var total=d*h*4.3;if(total<=0)return;var perHour=(inc/total)*(1+t/100);var projCount=inc/(perHour*p);var minPrice=perHour*p;show(perHour,projCount,minPrice,inc);}
+days.oninput=function(){dL.textContent=days.value;};
+hours.oninput=function(){hL.textContent=hours.value;};
+tax.oninput=function(){tL.textContent=tax.value;};
+calc.onclick=calcIt;
+for(var i=0;i<currBtns.length;i++){currBtns[i].onclick=function(){for(var j=0;j<currBtns.length;j++)currBtns[j].classList.remove('on');this.classList.add('on');cur=this.getAttribute('data-c');if(!res.classList.contains('hid'))show(last1,last2,last3,lastInc);};}
+window.onload=function(){dL.textContent=days.value;hL.textContent=hours.value;tL.textContent=tax.value;calcIt();};
+days.oninput=function(){dL.textContent=days.value;if(!res.classList.contains('hid'))calcIt();};
+hours.oninput=function(){hL.textContent=hours.value;if(!res.classList.contains('hid'))calcIt();};
+tax.oninput=function(){tL.textContent=tax.value;if(!res.classList.contains('hid'))calcIt();};
+income.oninput=function(){if(!res.classList.contains('hid'))calcIt();};
+proj.oninput=function(){if(!res.classList.contains('hid'))calcIt();};
+</script>
+</body>
+</html>
