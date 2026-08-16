@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Калькулятор</title>
+    <style>
+        body { background: #0B0F1A; color: #fff; font-family: Arial; display: flex; justify-content: center; padding: 30px; }
+        .block { background: #121A2B; padding: 30px; border-radius: 30px; max-width: 700px; width: 100%; }
+        input, button { width: 100%; padding: 12px; margin: 5px 0 15px 0; border-radius: 12px; border: none; font-size: 16px; }
+        input { background: #0F172A; color: #fff; border: 1px solid #1E2A42; }
+        button { background: #4A8AF4; color: #fff; font-weight: bold; cursor: pointer; }
+        .row { display: flex; gap: 10px; align-items: center; }
+        .row input[type="range"] { flex: 1; }
+        .val { color: #6EA8FE; font-weight: bold; min-width: 30px; }
+        .card { background: #0F172A; padding: 15px 20px; border-radius: 16px; margin: 8px 0; display: flex; justify-content: space-between; }
+        .red { border-left: 4px solid #FF6B6B; }
+        .red span:last-child { color: #FF6B6B; }
+        .graph-bg { background: #1E2A42; height: 12px; border-radius: 20px; margin: 10px 0; }
+        .graph-fill { background: #4A8AF4; height: 100%; width: 0%; border-radius: 20px; }
+        .curr { display: flex; gap: 5px; justify-content: flex-end; margin-bottom: 15px; }
+        .curr button { width: auto; padding: 6px 18px; border-radius: 14px; background: #0F172A; color: #6A7FA0; border: 1px solid #1E2A42; }
+        .curr button.on { background: #4A8AF4; color: #fff; }
+        .hid { display: none; }
+        .check { margin-top: 20px; border-top: 1px solid #1E2A42; padding-top: 15px; }
+        .check span { display: inline-block; margin-right: 20px; color: #8AA4D6; }
+    </style>
+</head>
+<body>
+
+<div class="block">
+
+    <h2>💰 Сколько стоит твой час?</h2>
+    <p style="color:#8AA4D6;">Рассчитай цену, чтобы не работать в убыток</p>
+
+    <div class="curr">
+        <button class="on" data-c="rub">₽</button>
+        <button data-c="usd">$</button>
+        <button data-c="eur">€</button>
+    </div>
+
+    <label>💰 Доход в месяц</label>
+    <input type="number" id="income" value="50000">
+
+    <label>📅 Дней в неделю — <span class="val" id="dL">5</span></label>
+    <input type="range" id="days" min="1" max="7" value="5">
+
+    <label>⏳ Часов в день — <span class="val" id="hL">6</span></label>
+    <input type="range" id="hours" min="1" max="12" value="6">
+
+    <label>📊 Налоги % — <span class="val" id="tL">30</span>%</label>
+    <input type="range" id="tax" min="0" max="50" value="30">
+
+    <label>⏱ Часов на проект</label>
+    <input type="number" id="proj" value="10">
+
+    <button id="calc">🚀 РАССЧИТАТЬ</button>
+
+    <div id="res" class="hid">
+        <div class="card"><span>💵 Ставка за час</span><span id="r1">0</span></div>
+        <div class="card"><span>📦 Проектов в месяц</span><span id="r2">0</span></div>
+        <div class="card red"><span>⚠️ Мин. цена проекта</span><span id="r3">0</span></div>
+        <div style="margin-top:10px;"><span style="color:#8AA4D6;">📈 Доход при цене проекта</span></div>
+        <div class="graph-bg"><div class="graph-fill" id="gf"></div></div>
+        <div class="check"><span>✅ Я учитываю налоги</span><span>✅ Я ценю свои навыки</span></div>
+    </div>
+
+</div>
+
+<script>
+// ===== ВСЁ ПРОСТО И РАБОТАЕТ =====
+
+var income = document.getElementById('income');
+var days = document.getElementById('days');
+var hours = document.getElementById('hours');
+var tax = document.getElementById('tax');
+var proj = document.getElementById('proj');
+var dL = document.getElementById('dL');
+var hL = document.getElementById('hL');
+var tL = document.getElementById('tL');
+var calc = document.getElementById('calc');
+var res = document.getElementById('res');
+var r1 = document.getElementById('r1');
+var r2 = document.getElementById('r2');
+var r3 = document.getElementById('r3');
+var gf = document.getElementById('gf');
+var currBtns = document.querySelectorAll('.curr button');
+
+var cur = 'rub';
+var la
+
+
+st1=0, last2=0, last3=0, lastInc=0;
+
+var sym = { rub:'₽', usd:'$', eur:'€' };
+var rate = { rub:1, usd:0.012, eur:0.011 };
+
+function fmt(v) {
+    var r = rate[cur] || 1;
+    var s = sym[cur] || '₽';
+    var x = v * r;
+    if (cur == 'rub') return Math.round(x) + ' ' + s;
+    return x.toFixed(2) + ' ' + s;
+}
+
+function show(a, b, c, inc) {
+    last1 = a; last2 = b; last3 = c; lastInc = inc;
+    res.classList.remove('hid');
+    r1.textContent = fmt(a);
+    r2.textContent = Math.round(b) + ' шт';
+    r3.textContent = fmt(c);
+    var max = inc * 0.3 || 1;
+    var p = Math.min((c / max) * 100, 100);
+    gf.style.width = p + '%';
+}
+
+function calcIt() {
+    var inc = parseFloat(income.value) || 0;
+    var d = parseInt(days.value) || 1;
+    var h = parseInt(hours.value) || 1;
+    var t = parseInt(tax.value) || 0;
+    var p = parseFloat(proj.value) || 1;
+    if (inc <= 0 || p <= 0) { alert('Введи доход и часы на проект > 0'); return; }
+    var total = d * h * 4.3;
+    if (total <= 0) return;
+    var perHour = (inc / total) * (1 + t / 100);
+    var projCount = inc / (perHour * p);
+    var minPrice = perHour * p;
+    show(perHour, projCount, minPrice, inc);
+}
+
+// ползунки
+days.oninput = function() { dL.textContent = days.value; };
+hours.oninput = function() { hL.textContent = hours.value; };
+tax.oninput = function() { tL.textContent = tax.value; };
+
+// кнопка
+calc.onclick = calcIt;
+
+// валюта
+for (var i=0; i<currBtns.length; i++) {
+    currBtns[i].onclick = function() {
+        for (var j=0; j<currBtns.length; j++) currBtns[j].classList.remove('on');
+        this.classList.add('on');
+        cur = this.getAttribute('data-c');
+        if (!res.classList.contains('hid')) show(last1, last2, last3, lastInc);
+    };
+}
+
+// автозапуск
+window.onload = function() {
+    dL.textContent = days.value;
+    hL.textContent = hours.value;
+    tL.textContent = tax.value;
+    calcIt();
+};
+
+// живой пересчёт
+days.oninput = function() { dL.textContent = days.value; if (!res.classList.contains('hid')) calcIt(); };
+hours.oninput = function() { hL.textContent = hours.value; if (!res.classList.contains('hid')) calcIt(); };
+tax.oninput = function() { tL.textContent = tax.value; if (!res.classList.contains('hid')) calcIt(); };
+income.oninput = function() { if (!res.classList.contains('hid')) calcIt(); };
+proj.oninput = function() { if (!res.classList.contains('hid')) calcIt(); };
+</script>
+
+</body>
+</html>
+
+
+
+
